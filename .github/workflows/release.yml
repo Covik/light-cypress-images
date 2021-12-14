@@ -34,4 +34,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ format('{0}:{1}', github.repository, inputs.tag) }}
+          tags: ${{ format('{0}:{1}', github.repository, github.event.inputs.tag) }}
