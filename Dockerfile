@@ -4,7 +4,11 @@ FROM node:17.2.0-bullseye-slim
 # https://github.com/SeleniumHQ/docker-selenium/issues/87
 ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+    ca-certificates \
+    gnupg \
+    wget \
     # Cypress dependencies
     libgtk2.0-0 \
     libgtk-3-0 \
@@ -16,17 +20,16 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libasound2 \
     libxtst6 \
     xauth \
-    xvfb \
-    # Chrome dependencies
-    fonts-liberation \
-    libayatana-appindicator3-1 \
-    xdg-utils \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    xvfb
 
 # Install Google Chrome
-ARG CHROME_VERSION=94.0.4606.71
-RUN wget -O /tmp/google-chrome-stable_current_amd64.deb "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}-1_amd64.deb" && \
-    dpkg -i /tmp/google-chrome-stable_current_amd64.deb ; \
-    apt-get install -f -y && \
-    rm -f /tmp/google-chrome-stable_current_amd64.deb
+ARG CHROME_VERSION=96.0.4664.110
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub \
+    | gpg --dearmor \
+    | tee /usr/share/keyrings/google-chrome-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/google-chrome-archive-keyring.gpg] https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y google-chrome-stable=${CHROME_VERSION}-1
+
+RUN rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
